@@ -1,80 +1,76 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.5)
 project(ublox_gps)
-find_package(catkin REQUIRED COMPONENTS
-  tf
-  roscpp
-  roscpp_serialization
-  ublox_msgs
-  ublox_serialization
-  diagnostic_updater
-  rtcm_msgs
-  nmea_msgs
+
+# Default to C99
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
+
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# list(APPEND CMAKE_PREFIX_PATH "/opt/weston_robot/lib/cmake")
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+
+find_package(bunker_msgs REQUIRED)
+find_package(ugv_sdk REQUIRED)
+
+include_directories(
+  include
 )
 
-catkin_package(
-    INCLUDE_DIRS include
-    LIBRARIES ${PROJECT_NAME}
-    CATKIN_DEPENDS tf roscpp ublox_msgs ublox_serialization rtcm_msgs nmea_msgs)
-
-# include boost
-find_package(Boost REQUIRED COMPONENTS system regex thread)
-link_directories(${Boost_LIBRARY_DIR})
-include_directories(${Boost_INCLUDE_DIR})
-
-# include other ublox packages
-include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(${catkin_INCLUDE_DIRS})
-
-# link pthread
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
-
-# build library
-add_library(ublox_gps src/gps.cpp)
-
-# fix msg compile order bug
-add_dependencies(ublox_gps ${catkin_EXPORTED_TARGETS})
-
-target_link_libraries(ublox_gps
-  boost_system
-  boost_regex
-  boost_thread
+set(DEPENDENCIES
+  "geometry_msgs"
+  "nav_msgs"
+  "rclcpp"
+  "std_msgs"
+  "tf2"
+  "tf2_ros"
+  "bunker_msgs"
+  "sensor_msgs"
 )
 
-target_link_libraries(ublox_gps
-  ${catkin_LIBRARIES}
-)
+## Main body
+# add_library(mobile_base_messenger STATIC
+#   src/mobile_base_messenger.cpp
+# )
+# ament_target_dependencies(mobile_base_messenger geometry_msgs
+#   rclcpp tf2 tf2_ros std_msgs nav_msgs sensor_msgs robot_msgs)
+# target_link_libraries(mobile_base_messenger westonrobot::wrp_sdk)
 
-# build node
-add_executable(ublox_gps_node src/node.cpp src/mkgmtime.c src/raw_data_pa.cpp)
-set_target_properties(ublox_gps_node PROPERTIES OUTPUT_NAME ublox_gps)
+add_executable(bunker_base_node 
+    src/bunker_base_ros.cpp
+    src/bunker_base_node.cpp)
+target_link_libraries(bunker_base_node ugv_sdk)
+ament_target_dependencies(bunker_base_node rclcpp tf2 tf2_ros std_msgs nav_msgs sensor_msgs bunker_msgs)
 
-target_link_libraries(ublox_gps_node boost_system boost_regex boost_thread)
-target_link_libraries(ublox_gps_node ${catkin_LIBRARIES})
-target_link_libraries(ublox_gps_node ublox_gps)
+install(TARGETS bunker_base_node
+  DESTINATION lib/${PROJECT_NAME})
 
-# build logger node
-add_executable(ublox_logger_node src/logger_node_pa.cpp src/raw_data_pa.cpp)
-set_target_properties(ublox_logger_node PROPERTIES OUTPUT_NAME ublox_logger)
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}/)
+  
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # uncomment the line when a copyright and license is not present in all source files
+  #set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # uncomment the line when this package is not in a git repo
+  #set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
-target_link_libraries(ublox_logger_node ${catkin_LIBRARIES})
-
-install(TARGETS ublox_gps ublox_gps_node ublox_logger_node
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  PATTERN ".svn" EXCLUDE
-)
-
-install(DIRECTORY config/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
-  PATTERN ".svn" EXCLUDE
-)
-
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-  PATTERN ".svn" EXCLUDE
-)
+ament_package()
