@@ -26,6 +26,7 @@ find_package(tf2 REQUIRED)
 find_package(ublox_msgs REQUIRED)
 find_package(ublox_serialization REQUIRED)
 find_package(rtcm_msgs REQUIRED)
+find_package(class_loader REQUIRED)
 
 # build node
 add_library(ublox_gps
@@ -50,6 +51,7 @@ target_include_directories(ublox_gps PUBLIC
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
   ${diagnostic_updater_INCLUDE_DIRS}
 )
+
 target_link_libraries(ublox_gps PUBLIC
   ${asio_LIBRARIES}
   ${diagnostic_updater_LIBRARIES}
@@ -57,13 +59,14 @@ target_link_libraries(ublox_gps PUBLIC
   ${geometry_msgs_TARGETS}
   ${rcl_interfaces_TARGETS}
   rclcpp::rclcpp
-  rclcpp_components::component
+  # rclcpp_components::component
   ${rtcm_msgs_TARGETS}
   ${sensor_msgs_TARGETS}
   ${std_msgs_TARGETS}
   tf2::tf2
   ${ublox_msgs_TARGETS}
   ublox_serialization::ublox_serialization
+  ${class_loader_TARGETS}
 )
 
 install(TARGETS ublox_gps EXPORT export_${PROJECT_NAME}

@@ -103,8 +103,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     std_msgs
 )
 
-rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
-if(cpp_typesupport_target)
+#rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
+#if(cpp_typesupport_target)
   add_library(${PROJECT_NAME}_lib src/ublox_msgs.cpp)
   target_include_directories(${PROJECT_NAME}_lib PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -114,6 +114,8 @@ if(cpp_typesupport_target)
     ublox_serialization::ublox_serialization
   )
 
+  rosidl_target_interfaces(${PROJECT_NAME}_lib ${PROJECT_NAME} "rosidl_typesupport_cpp")
+
   install(TARGETS ${PROJECT_NAME}_lib EXPORT ${PROJECT_NAME}_lib
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
@@ -121,13 +123,13 @@ if(cpp_typesupport_target)
   )
 
   install(DIRECTORY include/
-    DESTINATION "include/${PROJECT_NAME}"
+    DESTINATION "include/"
   )
 
   ament_export_include_directories("include/${PROJECT_NAME}")
   ament_export_libraries(${PROJECT_NAME}_lib)
   ament_export_targets(${PROJECT_NAME}_lib)
-endif()
+#endif()
 
 ament_export_dependencies(rosidl_default_runtime sensor_msgs std_msgs ublox_serialization)
 
